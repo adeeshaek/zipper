@@ -2,7 +2,7 @@ import sbtcrossproject.CrossPlugin.autoImport.crossProject
 
 val commonSettings = Seq(
   version := "1.5.2",
-  scalaVersion := "2.12.9",
+  scalaVersion := "2.13.0",
   crossScalaVersions := Seq("2.12.9", "2.13.0"),
   scalacOptions ++= Seq("-feature", "-deprecation", "-Xlint"),
   scalacOptions in (Compile, doc) += "-no-link-warnings"
@@ -33,10 +33,6 @@ lazy val zipper = crossProject(JSPlatform, JVMPlatform).in(file("."))
       "com.chuusai" %%% "shapeless" % "2.3.3",
       "org.scalatest" %%% "scalatest" % "3.0.8" % Test
     )
-  ).jvmSettings(
-    scalafixDependencies in ThisBuild += "org.scala-lang.modules" %% "scala-collection-migrations" % "2.1.1",
-    libraryDependencies +=  "org.scala-lang.modules" %% "scala-collection-compat" % "2.1.2",
-    scalacOptions ++= List("-Yrangepos", "-P:semanticdb:synthetics:on")
   )
 
 lazy val zipperJVM = zipper.jvm
@@ -46,7 +42,7 @@ lazy val root = project.in(file("."))
   .aggregate(zipperJVM, zipperJS)
   .settings(commonSettings)
   .settings(
-    name := "zipper",
+    name := "zipper-root",
     publish := {},
     publishLocal := {},
     publishArtifact := false

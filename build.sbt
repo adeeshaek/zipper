@@ -1,57 +1,42 @@
+import sbtcrossproject.CrossPlugin.autoImport.crossProject
+
 val commonSettings = Seq(
-  scalaVersion := "2.11.11",
-  crossScalaVersions := Seq("2.11.11", "2.12.2"),
-  scalacOptions ++= Seq(
-    "-feature", "-deprecation",
-    "-Xlint", "-Ywarn-unused-import", "-Xfatal-warnings"
-  ),
+  version := "1.5.2",
+  scalaVersion := "2.12.9",
+  crossScalaVersions := Seq("2.12.9", "2.13.0"),
+  scalacOptions ++= Seq("-feature", "-deprecation", "-Xlint"),
   scalacOptions in (Compile, doc) += "-no-link-warnings"
 ) ++ metadata ++ publishing
 
 lazy val metadata = Seq(
-  organization := "io.github.stanch",
+  organization := "com.kyleu",
   homepage := Some(url("https://stanch.github.io/zipper/")),
-  scmInfo := Some(ScmInfo(
-    url("https://github.com/stanch/zipper"),
-    "scm:git@github.com:stanch/zipper.git"
-  )),
-  developers := List(Developer(
-    id="stanch",
-    name="Nick Stanchenko",
-    email="nick.stanch@gmail.com",
-    url=url("https://github.com/stanch")
-  )),
+  scmInfo := Some(ScmInfo(url("https://github.com/kyleu/zipper"), "scm:git@github.com:kyleu/zipper.git")),
+  developers := List(
+    Developer(id = "stanch", name = "Nick Stanchenko", email = "nick.stanch@gmail.com", url = url("https://github.com/stanch")),
+    Developer(id = "kyleu", name = "Kyle Unverferth", email = "opensource@kyleu.com", url = url("http://kyleu.com"))
+  ),
   licenses += ("MIT", url("http://opensource.org/licenses/MIT"))
 )
 
 lazy val publishing = Seq(
-  useGpg := false,
-  usePgpKeyHex("8ED74E385203BEB1"),
-  pgpPublicRing := baseDirectory.value.getParentFile / ".gnupg" / "pubring.gpg",
-  pgpSecretRing := baseDirectory.value.getParentFile / ".gnupg" / "secring.gpg",
-  pgpPassphrase := sys.env.get("PGP_PASS").map(_.toArray),
-  credentials += Credentials(
-    "Sonatype Nexus Repository Manager",
-    "oss.sonatype.org",
-    sys.env.getOrElse("SONATYPE_USER", ""),
-    sys.env.getOrElse("SONATYPE_PASS", "")
-  ),
-  publishTo := Some(Opts.resolver.sonatypeStaging)
+  publishMavenStyle := true,
+  publishTo := Some(MavenRepository("sonatype-staging", "https://oss.sonatype.org/service/local/staging/deploy/maven2"))
 )
 
-lazy val zipper = crossProject.in(file("."))
+lazy val zipper = crossProject(JSPlatform, JVMPlatform).in(file("."))
   .settings(commonSettings)
   .settings(
     name := "zipper",
     version := "0.5.2",
     libraryDependencies ++= Seq(
-      "com.chuusai" %%% "shapeless" % "2.3.2",
-      "org.scalatest" %%% "scalatest" % "3.0.3" % Test
+      "com.chuusai" %%% "shapeless" % "2.3.3",
+      "org.scalatest" %%% "scalatest" % "3.0.8" % Test
     )
-  )
-  .jvmSettings(
-    tutSettings,
-    tutTargetDirectory := baseDirectory.value.getParentFile
+  ).jvmSettings(
+    scalafixDependencies in ThisBuild += "org.scala-lang.modules" %% "scala-collection-migrations" % "2.1.1",
+    libraryDependencies +=  "org.scala-lang.modules" %% "scala-collection-compat" % "2.1.2",
+    scalacOptions ++= List("-Yrangepos", "-P:semanticdb:synthetics:on")
   )
 
 lazy val zipperJVM = zipper.jvm
@@ -61,9 +46,8 @@ lazy val root = project.in(file("."))
   .aggregate(zipperJVM, zipperJS)
   .settings(commonSettings)
   .settings(
+    name := "zipper",
     publish := {},
     publishLocal := {},
     publishArtifact := false
   )
-
-addCommandAlias("cov", ";coverage; test; coverageOff; coverageReport")

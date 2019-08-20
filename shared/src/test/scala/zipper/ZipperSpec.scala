@@ -127,7 +127,7 @@ class ZipperSpec extends FlatSpec with Matchers {
     val (zipper, sum) = Zipper(tree)
       .repeatWhileNot(_.x > 10, next)
       .tapFocus(_.x shouldEqual 11)
-      .loopAccum(0) { (z, a) ⇒
+      .loopAccum(0) { (z, a) =>
         if (a > 1000) (z.fail, a)
         else (next(z), a + z.focus.x)
       }

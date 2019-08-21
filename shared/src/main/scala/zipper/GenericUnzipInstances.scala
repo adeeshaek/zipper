@@ -35,14 +35,12 @@ private[zipper] trait GenericUnzipInstances {
       factory: Factory[A, Coll[A]]
     ): Unzip[A] = new Unzip[A] {
       def unzip(node: A): List[A] = select(generic.to(node)).toList
-      def zip(node: A, children: List[A]): A = {
-        generic.from(
-          replace(
-            t = generic.to(node),
-            u = children.to[Coll[A]](factory)
-          )._2
-        )
-      }
+      def zip(node: A, children: List[A]): A = generic.from(
+        replace(
+          t = generic.to(node),
+          u = children.to[Coll[A]](factory)
+        )._2
+      )
     }
   }
 }

@@ -1,9 +1,9 @@
 package zipper
 
-import shapeless._
-import shapeless.ops.hlist._
+import shapeless.ops.hlist.{Replacer, Selector}
+import shapeless.{Generic, HList}
 
-import scala.collection.BuildFrom
+import scala.collection.Factory
 import scala.language.higherKinds
 
 private[zipper] trait GenericUnzipInstances {
@@ -12,6 +12,7 @@ private[zipper] trait GenericUnzipInstances {
     select: Selector[L, List[A]],
     replace: Replacer.Aux[L, List[A], List[A], (List[A], L)]
   ): Unzip[A] = new Unzip[A] {
+    type Out = (List[A], L)
     def unzip(node: A): List[A] = select(generic.to(node))
     def zip(node: A, children: List[A]): A = generic.from(replace(generic.to(node), children)._2)
   }
@@ -31,14 +32,14 @@ private[zipper] trait GenericUnzipInstances {
       implicit generic: Generic.Aux[A, L],
       select: Selector[L, Coll[A]],
       replace: Replacer.Aux[L, Coll[A], Coll[A], (Coll[A], L)],
-      cbf: BuildFrom[List[A], A, Coll[A]]
+      factory: Factory[A, Coll[A]]
     ): Unzip[A] = new Unzip[A] {
       def unzip(node: A): List[A] = select(generic.to(node)).toList
       def zip(node: A, children: List[A]): A = {
         generic.from(
           replace(
             t = generic.to(node),
-            u = cbf.newBuilder(children).result()
+            u = children.to[Coll[A]](factory)
           )._2
         )
       }

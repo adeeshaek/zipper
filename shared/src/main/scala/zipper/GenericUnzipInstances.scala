@@ -3,7 +3,7 @@ package zipper
 import shapeless._
 import shapeless.ops.hlist._
 
-import scala.collection.generic.CanBuildFrom
+import scala.collection.BuildFrom
 import scala.language.higherKinds
 
 private[zipper] trait GenericUnzipInstances {
@@ -31,10 +31,17 @@ private[zipper] trait GenericUnzipInstances {
       implicit generic: Generic.Aux[A, L],
       select: Selector[L, Coll[A]],
       replace: Replacer.Aux[L, Coll[A], Coll[A], (Coll[A], L)],
-      cbf: CanBuildFrom[Coll[A], A, Coll[A]]
+      cbf: BuildFrom[List[A], A, Coll[A]]
     ): Unzip[A] = new Unzip[A] {
       def unzip(node: A): List[A] = select(generic.to(node)).toList
-      def zip(node: A, children: List[A]): A = generic.from(replace(generic.to(node), (cbf() ++= children).result())._2)
+      def zip(node: A, children: List[A]): A = {
+        generic.from(
+          replace(
+            t = generic.to(node),
+            u = cbf.newBuilder(children).result()
+          )._2
+        )
+      }
     }
   }
 }
